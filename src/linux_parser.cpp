@@ -119,7 +119,7 @@ long LinuxParser::ActiveJiffies(int pid) {
    long activeJiffers = 0.0;
    std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
    if(stream.is_open()){
-     std::getline(stream, line);
+     while(std::getline(stream, line)){
      std::istringstream linestream(line);
      for(int i = 0; i<17; i++){
        linestream >> value;
@@ -127,6 +127,7 @@ long LinuxParser::ActiveJiffies(int pid) {
          activeJiffers += std::stol(value);
        }
      }
+   }
    }
    stream.close();
   return activeJiffers; 
@@ -234,7 +235,7 @@ string LinuxParser::Ram(int pid) {
    while (std::getline(stream, line)) {
     std::istringstream linestream(line);
     while(linestream >> key >> value){
-      if(key == "VmSize:"){
+      if(key == "VmRSS:"){
         ram = std::to_string(std::stol(value)/1024);
         break;
       }
@@ -308,30 +309,11 @@ long LinuxParser::UpTime(int pid) {
 
 // CPU utilization of the process
 float LinuxParser::CpuUtilization(int pid){
-  float cpuUsage, totalTime = 0.0, seconds = 0.0;
-    string line, value, uTime, sTime, cuTime, csTime, startTime;
-    std::ifstream stream(kProcDirectory + std::to_string(pid) + kStatFilename);
-    if(stream.is_open()){
-       std::getline(stream, line);
-       std::istringstream linestream(line);
-       for(int i = 0; i<22; i++){
-           linestream >> value;
-           if(i == 13){
-               uTime = value;}
-           if(i == 14){
-               sTime = value;}
-           if(i == 15){
-               cuTime = value;}
-           if(i == 16){
-               csTime = value;}
-           if(i == 21){
-               startTime = value;}
-       }
-        long upTime = LinuxParser::UpTime();
-        totalTime = std::stof(uTime + sTime + cuTime + csTime);
-        seconds = upTime - (std::stof(startTime)/sysconf(_SC_CLK_TCK));
-        cpuUsage = ((totalTime/sysconf(_SC_CLK_TCK))/seconds);
-    }
-    stream.close();
-    return cpuUsage; 
+  float cpuUsage;
+  float systemActiveJiffies = LinuxParser::ActiveJiffies();
+  float systemIdleJiffies = LinuxParser::IdleJiffies();
+  
+  cpuUsage = 100 * (LinuxParser::ActiveJiffies(pid) / (systemActiveJiffies + systemIdleJiffies));
+    
+  return cpuUsage; 
 }
