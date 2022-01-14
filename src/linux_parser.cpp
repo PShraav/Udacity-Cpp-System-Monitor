@@ -313,7 +313,7 @@ float LinuxParser::CpuUtilization(int pid){
   float systemActiveJiffies = LinuxParser::ActiveJiffies();
   float systemIdleJiffies = LinuxParser::IdleJiffies();
   
-  cpuUsage = 100 * (LinuxParser::ActiveJiffies(pid) / (systemActiveJiffies + systemIdleJiffies));
+  cpuUsage = (LinuxParser::ActiveJiffies(pid) / (systemActiveJiffies + systemIdleJiffies));
     
   return cpuUsage; 
 }

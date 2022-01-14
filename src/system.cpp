@@ -21,11 +21,12 @@ vector<Process>& System::Processes() {
     vector<int> pid = LinuxParser::Pids();
     for(unsigned int i = 0; i < pid.size(); i++){
        Process p = Process(pid[i]);
-       processes_.push_back(p);
+       if(p.Command()!= "" && p.Ram()!= ""){
+         processes_.push_back(p);
+       }  
     }
-
     std::sort(processes_.begin(), processes_.end());
-    
+   
     return processes_; 
 }
 
